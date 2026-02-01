@@ -1,7 +1,7 @@
 import adapter from '@sveltejs/adapter-node';
-import { type Config } from '@sveltejs/kit';
 
-const config: Config = {
+/** @type {import('@sveltejs/kit').Config} */
+const config = {
 	compilerOptions: { runes: true },
 	kit: {
 		experimental: { remoteFunctions: true },

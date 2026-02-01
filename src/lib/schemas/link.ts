@@ -18,7 +18,6 @@ export const LinkFormSchema = z.object({
 		.max(255, 'Maximum 255 characters'),
 	faviconUrl: z.url('Must be a URL').trim().max(255, 'Maximum 255 characters').optional(),
 	imgUrl: z.url('Must be a URL').trim().max(255, 'Maximum 255 characters').optional(),
-	embedding: z.array(z.number()).length(1024, 'Must include exactly 1024 values').optional(),
 	content: z.string().optional(),
 	contentHash: z.string().optional(),
 	status: z.enum(LinkStatusValues).default('pending_fetch'),

@@ -1,5 +1,5 @@
 import { sql } from 'drizzle-orm';
-import { sqliteTable, integer, customType, text, index } from 'drizzle-orm/sqlite-core';
+import { sqliteTable, integer, customType, text, index, foreignKey } from 'drizzle-orm/sqlite-core';
 import { sqlizeVector } from '../utils/sql-vectors';
 import { LinkStatusValues } from '../../schemas/link';
 
@@ -32,8 +32,6 @@ export const LinksTable = sqliteTable(
 		title: text().notNull(),
 		faviconUrl: text(),
 		imgUrl: text(),
-		// 1024 for Mistral
-		embedding: float32Array({ dimensions: 1024 }),
 		content: text(),
 		contentHash: text(),
 		status: text({ enum: LinkStatusValues }).notNull().default('pending_fetch'),
@@ -45,9 +43,24 @@ export const LinksTable = sqliteTable(
 		fetchedAt: integer({ mode: 'timestamp' }),
 	},
 	(table) => [
-		index('link_embedding_vector_idx').on(sql`libsql_vector_idx(${table.embedding})`),
 		index('link_hash_idx').on(table.contentHash),
 		index('link_title_idx').on(table.title),
 		index('link_status_idx').on(table.status, table.retryCount, table.createdAt),
+	],
+);
+
+export const LinkEmbeddingChunksTable = sqliteTable(
+	'link_embedding_chunks',
+	{
+		id: integer().primaryKey({ autoIncrement: true }),
+		linkId: integer().notNull(),
+		chunkIndex: integer().notNull(),
+		content: text().notNull(),
+		embedding: float32Array({ dimensions: 1024 }).notNull(),
+	},
+	(table) => [
+		foreignKey({ columns: [table.linkId], foreignColumns: [LinksTable.id] }).onDelete('cascade'),
+		index('chunk_embedding_vector_idx').on(sql`libsql_vector_idx(${table.embedding})`),
+		index('chunk_link_id_idx').on(table.linkId),
 	],
 );

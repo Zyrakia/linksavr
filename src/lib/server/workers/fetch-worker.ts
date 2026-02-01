@@ -90,10 +90,10 @@ export async function runFetchWorker(id?: number): Promise<Result<WorkerResult, 
 		const contentHash = hashContent(markdown);
 
 		const updateRes = await LinkService.update(linkId, { title, faviconUrl });
-		if (updateRes.isErr()) return Err(updateRes.error);
+		if (updateRes.isErr()) return updateRes;
 
 		const markRes = await LinkQueueService.markFetched(linkId, markdown, contentHash);
-		if (markRes.isErr()) return Err(markRes.error);
+		if (markRes.isErr()) return markRes;
 
 		return Ok({ id: linkId });
 	} catch (err) {

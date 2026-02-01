@@ -1,7 +1,7 @@
 import { createService, DomainError } from '$lib/utils/service';
 import { eq, sql } from 'drizzle-orm';
 import { db } from '../db/db';
-import { LinksTable } from '../db/schema';
+import { LinksTable, LinkEmbeddingChunksTable } from '../db/schema';
 import { Ok, Err } from 'ts-results-es';
 
 export const LinkQueueService = createService(db, {
@@ -63,6 +63,19 @@ export const LinkQueueService = createService(db, {
 	},
 
 	/**
+	 * Claims a specific link by ID, setting its status to 'fetching'.
+	 */
+	claimEmbedById: async (client, id: number) => {
+		const [claimed] = await client
+			.update(LinksTable)
+			.set({ status: 'embedding' })
+			.where(eq(LinksTable.id, id))
+			.returning();
+
+		return Ok(claimed);
+	},
+
+	/**
 	 * Marks fetch step success.
 	 */
 	markFetched: async (client, id: number, content: string, contentHash: string) => {
@@ -83,13 +96,30 @@ export const LinkQueueService = createService(db, {
 	},
 
 	/**
-	 * Marks embedding step success.
+	 * Marks embedding step success. Inserts all chunk rows and updates link status.
 	 */
-	markEmbedded: async (client, id: number, embedding: number[]) => {
+	markEmbedded: async (
+		client,
+		id: number,
+		chunks: { content: string; embedding: number[] }[],
+	) => {
+		// Delete any existing chunks for this link (re-embed case)
+		await client.delete(LinkEmbeddingChunksTable).where(eq(LinkEmbeddingChunksTable.linkId, id));
+
+		if (chunks.length > 0) {
+			await client.insert(LinkEmbeddingChunksTable).values(
+				chunks.map((chunk, i) => ({
+					linkId: id,
+					chunkIndex: i,
+					content: chunk.content,
+					embedding: chunk.embedding,
+				})),
+			);
+		}
+
 		const res = await client
 			.update(LinksTable)
 			.set({
-				embedding,
 				embeddedAt: new Date(),
 				status: 'success',
 			})
@@ -105,10 +135,10 @@ export const LinkQueueService = createService(db, {
 	 * Records a processing failure and sets the next status.
 	 */
 	markFailure: async (client, id: number, step: 'fetch' | 'embed', errorMessage: string) => {
-		const [link] = await client
-			.select({ retryCount: LinksTable.retryCount, maxRetries: LinksTable.maxRetries })
-			.from(LinksTable)
-			.where(eq(LinksTable.id, id));
+		const link = await client.query.LinksTable.findFirst({
+			columns: { retryCount: true, maxRetries: true },
+			where: (t, { eq }) => eq(t.id, id),
+		});
 
 		if (!link) return Err(DomainError.of(`Unable to locate link for failure: ${id}`));
 

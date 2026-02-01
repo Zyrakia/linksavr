@@ -48,21 +48,22 @@
 		}
 	});
 
-	const failedStep = $derived(link.fetchedAt ? 'Embedding' : 'Fetching');
-
 	const deleteForm = $derived(deleteLink.for(String(link.id)));
 
 	let showErrorDialog = $state(false);
 	let showDeleteDialog = $state(false);
 </script>
 
-<div class="flex flex-col py-2">
+<div class="flex flex-col">
 	<div class="flex items-center gap-3">
 		{#if link.faviconUrl}
 			<img src={link.faviconUrl} alt="" class="size-5 shrink-0 rounded-sm" />
 		{:else}
 			<GlobeIcon
-				class={cn('shrink-0 text-muted-foreground', isProcessing && 'animate-pulse text-teal-400')}
+				class={cn(
+					'shrink-0 text-muted-foreground',
+					isProcessing && 'animate-pulse text-teal-400',
+				)}
 				size={18}
 			/>
 		{/if}
@@ -115,7 +116,7 @@
 
 	{#if isProcessing}
 		<div
-			class="ml-[8px] border-l-2 border-muted pl-5 pb-2 flex items-center gap-2 text-sm text-muted-foreground"
+			class="ml-2 border-l-2 border-muted pl-5 pb-2 flex items-center gap-2 text-sm text-muted-foreground"
 		>
 			<LoaderCircleIcon size={14} class="animate-spin" />
 			<span>{stepLabel}</span>
@@ -127,13 +128,10 @@
 	<DialogContent>
 		<DialogHeader>
 			<DialogTitle>Link Error</DialogTitle>
-			<DialogDescription>
-				Failed during the <strong>{failedStep}</strong> step.
-			</DialogDescription>
 		</DialogHeader>
 		<pre
-			class="text-sm bg-muted rounded-md p-3 whitespace-pre-wrap break-words"
-		>{link.statusText || 'No error details available.'}</pre>
+			class="text-sm bg-muted rounded-md p-3 whitespace-pre-wrap wrap-break-word">{link.statusText ||
+				'No error details available.'}</pre>
 	</DialogContent>
 </Dialog>
 

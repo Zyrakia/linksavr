@@ -10,7 +10,7 @@ const embeddingModel = modelProvider.embedding('mistral-embed');
 export const EMBEDDING_MAX_INPUT = 8000;
 
 const assertWithinInputLimit = (value: string) => {
-	if (value.length >= EMBEDDING_MAX_INPUT) {
+	if (value.length > EMBEDDING_MAX_INPUT) {
 		throw DomainError.of(
 			`Input exceeds max embedding length (${value.length}/${EMBEDDING_MAX_INPUT}).`,
 		);

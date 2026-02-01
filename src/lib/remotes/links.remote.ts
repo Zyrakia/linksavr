@@ -1,6 +1,7 @@
-import { command, form } from '$app/server';
+import { command, form, query } from '$app/server';
 import z from 'zod';
 import { LinkService } from '$lib/server/services/link-service';
+import { SearchService } from '$lib/server/services/search-service';
 import { unwrapOrDomain } from '$lib/utils/service';
 import { error } from '@sveltejs/kit';
 
@@ -35,4 +36,9 @@ export const deleteLink = form(z.object({ id: z.string() }), async ({ id }) => {
 
 	const result = await LinkService.delete(idValue);
 	return unwrapOrDomain(result, (msg) => error(404, msg));
+});
+
+export const simSearchLinks = query(z.object({ query: z.string().min(1) }), async ({ query }) => {
+	const result = await SearchService.similaritySearchByContent(query);
+	return unwrapOrDomain(result, (msg) => error(500, msg));
 });

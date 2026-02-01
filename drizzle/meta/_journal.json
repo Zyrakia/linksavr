@@ -8,6 +8,13 @@
       "when": 1769896360025,
       "tag": "0000_fancy_bruce_banner",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1769971866995,
+      "tag": "0001_mean_mongu",
+      "breakpoints": true
     }
   ]
 }
