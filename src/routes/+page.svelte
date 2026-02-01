@@ -16,13 +16,44 @@
 		InputGroupAddon,
 		InputGroupInput,
 	} from '$lib/components/ui/input-group/index';
-	import { createLinks } from '$lib/remotes/links.remote';
+	import { createLinks, pollLinkStatus } from '$lib/remotes/links.remote';
 	import { PlusIcon, SearchIcon } from '@lucide/svelte';
 
 	const { data } = $props();
 
-	const links = $derived(data.links);
+	// svelte-ignore state_referenced_locally
+	let links = $state(data.links);
 	let showAddLinksDialog = $state(false);
+
+	$effect(() => void (links = data.links));
+	const hasProcessing = $derived(
+		links.some((l) => l.status !== 'success' && l.status !== 'failed'),
+	);
+
+	$effect(() => {
+		if (!hasProcessing) return;
+
+		const interval = setInterval(async () => {
+			const ids = links
+				.filter((l) => l.status !== 'success' && l.status !== 'failed')
+				.map((l) => l.id);
+
+			if (!ids.length) return;
+
+			const updates = await pollLinkStatus({ ids });
+			for (const update of updates) {
+				const idx = links.findIndex((l) => l.id === update.id);
+				if (idx === -1) continue;
+
+				const current = links[idx];
+				if (!current) continue;
+
+				links[idx] = { ...current, ...update };
+			}
+		}, 3_000);
+
+		return () => clearInterval(interval);
+	});
 
 	let addingLinks = $state(false);
 	const addLinks = async (...links: URL[]) => {

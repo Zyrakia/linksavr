@@ -28,6 +28,19 @@ export const LinkQueueService = createService(db, {
 	},
 
 	/**
+	 * Claims a specific link by ID, setting its status to 'fetching'.
+	 */
+	claimFetchById: async (client, id: number) => {
+		const [claimed] = await client
+			.update(LinksTable)
+			.set({ status: 'fetching' })
+			.where(eq(LinksTable.id, id))
+			.returning();
+
+		return Ok(claimed);
+	},
+
+	/**
 	 * Claims the next link pending embedding for processing.
 	 */
 	claimNextEmbed: async (client) => {

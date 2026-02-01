@@ -70,6 +70,18 @@ export const LinkService = createService(db, {
 	},
 
 	/**
+	 * Returns the current status, title, and faviconUrl for the given IDs.
+	 */
+	pollStatus: async (client, ids: number[]) => {
+		const rows = await client.query.LinksTable.findMany({
+			columns: { id: true, status: true, title: true, faviconUrl: true },
+			where: (t, { inArray }) => inArray(t.id, ids),
+		});
+
+		return Ok(rows);
+	},
+
+	/**
 	 * Paginates through links by their created date in
 	 * descending order, optionally filtering by a title prefix.
 	 */
