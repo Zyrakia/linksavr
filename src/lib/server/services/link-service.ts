@@ -1,7 +1,8 @@
 import { createService, DomainError } from '$lib/utils/service';
 import { db } from '$lib/server/db/db';
 import { Err, Ok } from 'ts-results-es';
-import { LinksTable, type DatabaseLink } from '$lib/server/db/schema';
+import { LinksTable } from '$lib/server/db/schema';
+import type { DatabaseLink } from '$lib/server/db/types';
 import { pickUrlComponents } from '$lib/utils/url';
 import { eq } from 'drizzle-orm';
 
@@ -14,9 +15,16 @@ export const LinkService = createService(db, {
 	 * @return the created link entry, will be in the processing state
 	 */
 	create: async (client, ...urls: string[]) => {
-		const rows = urls.map((url) => {
+		const rowPromises = urls.map(async (url) => {
 			const parts = pickUrlComponents(url, 'href', 'hostname');
 			if (!parts) throw DomainError.of('Invalid URL');
+
+			const exists = await client.query.LinksTable.findFirst({
+				columns: { id: true },
+				where: (t, { eq }) => eq(t.href, parts.href),
+			});
+
+			if (exists) throw DomainError.of(`${parts.href} is a duplicate`);
 
 			return {
 				href: parts.href,
@@ -24,7 +32,9 @@ export const LinkService = createService(db, {
 			} satisfies typeof LinksTable.$inferInsert;
 		});
 
+		const rows = await Promise.all(rowPromises);
 		const inserted = await client.insert(LinksTable).values(rows).returning();
+
 		return Ok(inserted);
 	},
 

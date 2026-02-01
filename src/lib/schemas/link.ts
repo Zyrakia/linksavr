@@ -9,7 +9,7 @@ export const LinkStatusValues = [
 	'failed',
 ] as const;
 
-export const LinkSchema = z.object({
+export const LinkFormSchema = z.object({
 	href: z.url('URL is required').trim().max(1024, 'Maximum 1024 characters'),
 	title: z
 		.string('Title is required')
@@ -29,5 +29,5 @@ export const LinkSchema = z.object({
 	fetchedAt: z.number().nonnegative('Timestamp must be positive').optional(),
 });
 
-export type Link = z.infer<typeof LinkSchema>;
+export type LinkFormData = z.infer<typeof LinkFormSchema>;
 export type LinkStatus = (typeof LinkStatusValues)[number];

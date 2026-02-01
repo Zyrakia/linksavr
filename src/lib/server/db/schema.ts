@@ -51,5 +51,3 @@ export const LinksTable = sqliteTable(
 		index('link_status_idx').on(table.status, table.retryCount, table.createdAt),
 	],
 );
-
-export type DatabaseLink = typeof LinksTable.$inferSelect;
