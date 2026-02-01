@@ -9,6 +9,16 @@
 	} from '@lucide/svelte';
 	import { Button } from '$lib/components/ui/button';
 	import {
+		AlertDialog,
+		AlertDialogAction,
+		AlertDialogCancel,
+		AlertDialogContent,
+		AlertDialogDescription,
+		AlertDialogFooter,
+		AlertDialogHeader,
+		AlertDialogTitle,
+	} from '$lib/components/ui/alert-dialog';
+	import {
 		Dialog,
 		DialogContent,
 		DialogDescription,
@@ -43,10 +53,11 @@
 	const deleteForm = $derived(deleteLink.for(String(link.id)));
 
 	let showErrorDialog = $state(false);
+	let showDeleteDialog = $state(false);
 </script>
 
-<div class="flex flex-col">
-	<div class="flex items-center gap-3 py-2">
+<div class="flex flex-col py-2">
+	<div class="flex items-center gap-3">
 		{#if link.faviconUrl}
 			<img src={link.faviconUrl} alt="" class="size-5 shrink-0 rounded-sm" />
 		{:else}
@@ -79,18 +90,15 @@
 			</Button>
 		{/if}
 
-		<form {...deleteForm} class="shrink-0">
-			<input type="hidden" name="id" value={String(link.id)} />
-			<Button
-				type="submit"
-				variant="ghost"
-				size="icon-sm"
-				disabled={!!deleteForm.pending}
-			>
-				<TrashIcon size={16} />
-				<span class="sr-only">Delete</span>
-			</Button>
-		</form>
+		<Button
+			variant="ghost"
+			size="icon-sm"
+			class="shrink-0"
+			onclick={() => (showDeleteDialog = true)}
+		>
+			<TrashIcon size={16} />
+			<span class="sr-only">Delete</span>
+		</Button>
 
 		<Button
 			variant="ghost"
@@ -128,3 +136,23 @@
 		>{link.statusText || 'No error details available.'}</pre>
 	</DialogContent>
 </Dialog>
+
+<AlertDialog bind:open={showDeleteDialog}>
+	<AlertDialogContent>
+		<AlertDialogHeader>
+			<AlertDialogTitle>Delete link?</AlertDialogTitle>
+			<AlertDialogDescription>
+				Are you sure you want to delete "{link.title}"? This action cannot be undone.
+			</AlertDialogDescription>
+		</AlertDialogHeader>
+		<AlertDialogFooter>
+			<AlertDialogCancel>Cancel</AlertDialogCancel>
+			<form {...deleteForm}>
+				<input type="hidden" name="id" value={String(link.id)} />
+				<AlertDialogAction type="submit" disabled={!!deleteForm.pending}>
+					Delete
+				</AlertDialogAction>
+			</form>
+		</AlertDialogFooter>
+	</AlertDialogContent>
+</AlertDialog>

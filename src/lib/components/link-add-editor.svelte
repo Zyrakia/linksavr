@@ -8,14 +8,17 @@
 	import { normalizeUrl } from '$lib/utils/url';
 	import { GlobeIcon, Link2Icon, XIcon } from '@lucide/svelte';
 	import { Button } from './ui/button/index';
+	import { ScrollArea } from '$lib/components/ui/scroll-area';
 	import { cn } from '$lib/utils/cn';
 	import { fly } from 'svelte/transition';
+	import { tick } from 'svelte';
 
-	let { onsubmit, maxUrls = 5 }: { onsubmit?: (urls: URL[]) => void; maxUrls?: number } =
+	let { onsubmit, maxUrls = 100 }: { onsubmit?: (urls: URL[]) => void; maxUrls?: number } =
 		$props();
 
 	let input = $state('');
 	let inputFocused = $state(false);
+	let listEl = $state<HTMLUListElement | null>(null);
 
 	const detectedUrl = $derived(normalizeUrl(input));
 
@@ -24,9 +27,16 @@
 
 	const highlights: { url: URL; type: 'error' | 'success' }[] = $state([]);
 	const highlight = (url: URL, type: 'error' | 'success') => {
-		const entry = { url, type };
-		highlights.push(entry);
-		setTimeout(() => highlights.splice(highlights.indexOf(entry), 1), 1000);
+		const href = url.href;
+		highlights.push({ url, type });
+		tick().then(() => {
+			listEl?.querySelector<HTMLElement>(`[data-href="${CSS.escape(href)}"]`)
+				?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+		});
+		setTimeout(() => {
+			const idx = highlights.findIndex((v) => v.url.href === href);
+			if (idx !== -1) highlights.splice(idx, 1);
+		}, 1000);
 	};
 
 	const pushUrl = (url?: URL) => {
@@ -101,43 +111,46 @@
 	</InputGroup>
 
 	{#if urls.length}
-		<ul>
-			{#each urls as url, i (url.href)}
-				{@const highlight = highlights.filter((v) => v.url === url)[0]}
+		<ScrollArea class="max-h-64">
+			<ul bind:this={listEl}>
+				{#each urls as url, i (url.href)}
+					{@const highlight = highlights.filter((v) => v.url === url)[0]}
 
-				<li
-					class="grid grid-cols-[auto_1fr_auto] items-center gap-2"
-					transition:fly={{ x: -10, duration: 100 }}
-				>
-					<GlobeIcon
-						size={18}
-						class={cn(
-							'transition-colors',
-							'duration-500',
-							highlight &&
-								(highlight.type === 'error'
-									? 'text-destructive'
-									: 'text-green-500'),
-						)}
-					/>
-
-					<p class="flex min-w-0 gap-1">
-						<span class="truncate text-amber-300 max-w-4/5">{url.hostname}</span>
-						<span class="truncate text-gray-400 italic flex-1"
-							>{url.pathname + url.search}</span
-						>
-					</p>
-
-					<Button
-						variant="ghost"
-						class="ms-auto"
-						onclick={() => removeUrl(i)}
+					<li
+						data-href={url.href}
+						class="grid grid-cols-[auto_1fr_auto] items-center gap-2"
+						transition:fly={{ x: -10, duration: 100 }}
 					>
-						<XIcon class="text-destructive" />
-					</Button>
-				</li>
-			{/each}
-		</ul>
+						<GlobeIcon
+							size={18}
+							class={cn(
+								'transition-colors',
+								'duration-500',
+								highlight &&
+									(highlight.type === 'error'
+										? 'text-destructive'
+										: 'text-green-500'),
+							)}
+						/>
+
+						<p class="flex min-w-0 gap-1">
+							<span class="truncate text-amber-300 max-w-4/5">{url.hostname}</span>
+							<span class="truncate text-gray-400 italic flex-1"
+								>{url.pathname + url.search}</span
+							>
+						</p>
+
+						<Button
+							variant="ghost"
+							class="ms-auto"
+							onclick={() => removeUrl(i)}
+						>
+							<XIcon class="text-destructive" />
+						</Button>
+					</li>
+				{/each}
+			</ul>
+		</ScrollArea>
 
 		{#if maxUrlsReached}
 			<p class="border border-dashed p-3 text-center border-destructive bg-destructive/5">

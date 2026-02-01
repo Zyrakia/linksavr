@@ -133,4 +133,8 @@
 		@apply bg-background text-foreground antialiased;
 		font-family: var(--font-geist-sans);
 	}
+	button,
+	[role='button'] {
+		@apply cursor-pointer disabled:cursor-default aria-disabled:cursor-default;
+	}
 }
