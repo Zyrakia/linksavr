@@ -11,7 +11,7 @@
 	import { cn } from '$lib/utils/cn';
 	import { fly } from 'svelte/transition';
 
-	let { onsubmit, maxUrls = 100 }: { onsubmit?: (urls: URL[]) => void; maxUrls?: number } =
+	let { onsubmit, maxUrls = 5 }: { onsubmit?: (urls: URL[]) => void; maxUrls?: number } =
 		$props();
 
 	let input = $state('');
@@ -93,7 +93,7 @@
 		<InputGroupButton
 			disabled={!detectedUrl}
 			variant="outline"
-			class="me-2 cursor-pointer disabled:cursor-auto"
+			class="me-2"
 			onclick={() => pushUrl(detectedUrl)}
 		>
 			Add
@@ -130,7 +130,7 @@
 
 					<Button
 						variant="ghost"
-						class="ms-auto cursor-pointer"
+						class="ms-auto"
 						onclick={() => removeUrl(i)}
 					>
 						<XIcon class="text-destructive" />
@@ -151,7 +151,7 @@
 	{/if}
 
 	{#if urls.length !== 0}
-		<Button class="w-full cursor-pointer disabled:cursor-auto" onclick={() => submit()}
+		<Button class="w-full" onclick={() => submit()}
 			>Submit</Button
 		>
 	{/if}
