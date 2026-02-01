@@ -10,7 +10,9 @@ const QuerySchema = z.object({
 	offset: z.number().nonnegative(),
 });
 
-export const load: PageServerLoad = async ({ url }) => {
+export const load: PageServerLoad = async ({ url, depends }) => {
+	depends('change:links');
+
 	const query = zodPruneParams(QuerySchema, url.searchParams);
 	const linksRes = await LinkService.paginate(query.limit || 25, query.offset || 0);
 	if (linksRes.isErr()) {

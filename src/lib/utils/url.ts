@@ -39,10 +39,9 @@ export function normalizeUrl(raw: string) {
 
 	try {
 		const url = new URL(candidate);
-
 		if (!candidate.startsWith(url.origin)) return;
 
-		return url.href;
+		return url;
 	} catch {
 		return;
 	}

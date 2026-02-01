@@ -42,8 +42,6 @@
 </script>
 
 <script lang="ts">
-	import { createEventDispatcher } from "svelte";
-
 	let {
 		class: className,
 		variant = "default",
@@ -55,12 +53,6 @@
 		children,
 		...restProps
 	}: ButtonProps = $props();
-
-	const dispatch = createEventDispatcher<{ click: MouseEvent }>();
-
-	const handleClick = (event: MouseEvent) => {
-		dispatch("click", event);
-	};
 </script>
 
 {#if href}
@@ -72,7 +64,6 @@
 		aria-disabled={disabled}
 		role={disabled ? "link" : undefined}
 		tabindex={disabled ? -1 : undefined}
-		on:click={handleClick}
 		{...restProps}
 	>
 		{@render children?.()}
@@ -84,7 +75,6 @@
 		class={cn(buttonVariants({ variant, size }), className)}
 		{type}
 		{disabled}
-		on:click={handleClick}
 		{...restProps}
 	>
 		{@render children?.()}

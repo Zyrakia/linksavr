@@ -8,24 +8,23 @@ import { eq } from 'drizzle-orm';
 export const LinkService = createService(db, {
 	/**
 	 * Creates a link from a URL and queues it into
-	 * the processing pipeline.
+	 * the processing pipeline. Can be multiple links at once.
 	 *
-	 * @param url the URL to be processed
+	 * @param url the URLs to be processed
 	 * @return the created link entry, will be in the processing state
 	 */
-	create: async (client, url: string) => {
-		const parts = pickUrlComponents(url, 'href', 'hostname');
-		if (!parts) return Err(DomainError.of('Invalid URL'));
+	create: async (client, ...urls: string[]) => {
+		const rows = urls.map((url) => {
+			const parts = pickUrlComponents(url, 'href', 'hostname');
+			if (!parts) throw DomainError.of('Invalid URL');
 
-		const [inserted] = await client
-			.insert(LinksTable)
-			.values({
+			return {
 				href: parts.href,
 				title: parts.hostname,
-				status: 'pending_fetch',
-			})
-			.returning();
+			} satisfies typeof LinksTable.$inferInsert;
+		});
 
+		const inserted = await client.insert(LinksTable).values(rows).returning();
 		return Ok(inserted);
 	},
 

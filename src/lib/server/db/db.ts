@@ -5,4 +5,8 @@ import { drizzle } from 'drizzle-orm/libsql';
 import * as schema from './schema';
 
 const client = createClient({ url: env.DB_FILENAME });
-export const db = drizzle(client, { schema, casing: 'snake_case' });
+
+const _db = drizzle(client, { schema, casing: 'snake_case' });
+
+export type DatabaseClient = Omit<typeof _db, '$client' | 'batch'>;
+export const db = _db as DatabaseClient;
